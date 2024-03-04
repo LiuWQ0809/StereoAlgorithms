@@ -8,9 +8,6 @@
 ### 1.WeChat ID: cbp931126
 加微信(备注：StereoAlgorithm),拉你进群(群里超多大佬)
 
-### 2.QQ Group：517671804
-
-
 # Requirements
 1. ubuntu20.04+cuda11.1+cudnn8.2.1+TensorRT8.2.5.1 (test pass)
 2. ubuntu20.04+cuda11.1+cudnn8.2.1+TensorRT8.6.1.6 (FastACVNet_plus requied TensorRT8.6.1.6)
