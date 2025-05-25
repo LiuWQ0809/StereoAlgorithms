@@ -1,6 +1,6 @@
 #include"FastACVNet_plus_Algorithm.h"
 #include<iostream>
-
+#include<fstream>
 #include<chrono>
 
 
@@ -28,7 +28,7 @@ int main()
 {
 
     char* stereo_calibration_path="StereoCalibration.yml";
-    char* strero_engine_path="/home/pcb/Algorithm/StereoAlgorithmsPytorch/ACVNet/model/fast_acvnet_plus_generalization_opset16_480x640.onnx";
+    char* strero_engine_path="fast_acvnet_plus_generalization_opset16_480x640.onnx";
     
     cv::Mat imageL=cv::imread("left0.jpg");
     cv::Mat imageR=cv::imread("right0.jpg");
@@ -39,7 +39,7 @@ int main()
     //x,y,z,r,g,b
     float*pointcloud=new float[imageL.cols*imageL.rows*6];
     cv::Mat disparity;
-    for (size_t i = 0; i < 1000;i++)
+    for (size_t i = 0; i < 5;i++)
     {
         cv::Mat imageL1=imageL.clone();
         cv::Mat imageR1=imageR.clone();

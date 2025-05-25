@@ -40,7 +40,7 @@ int FastACVNet_plus::Initialize(std::string model_path,int gpu_id,CalibrationPar
         }
         Onnx2Ttr onnx2trt;
 		//IHostMemory* modelStream{ nullptr };
-		onnx2trt.onnxToTRTModel(gLogger,model_path.c_str(),1,out_engine.c_str());
+		onnx2trt.onnxToTRTModel(gLogger,model_path.c_str(),out_engine.c_str());
     }
     cudaSetDevice(gpu_id);
     std::ifstream file(out_engine, std::ios::binary);
@@ -68,12 +68,22 @@ int FastACVNet_plus::Initialize(std::string model_path,int gpu_id,CalibrationPar
     context = engine->createExecutionContext();
     assert(context != nullptr);
     delete[] trtModelStream;
-    assert(engine->getNbBindings() == 3);
+    // assert(engine->getNbBindings() == 3);
+    assert(engine->getNbIOTensors() == 3);
     // In order to bind the buffers, we need to know the names of the input and output tensors.
     // Note that indices are guaranteed to be less than IEngine::getNbBindings()
-    inputIndex1 = engine->getBindingIndex(INPUT_BLOB_NAME1);
-    inputIndex2 = engine->getBindingIndex(INPUT_BLOB_NAME2);
-    outputIndex = engine->getBindingIndex(OUTPUT_BLOB_NAME);
+    if (strcmp(engine->getIOTensorName(0), INPUT_BLOB_NAME1) == 0) {
+        inputIndex1 = 0;
+    }
+    if (strcmp(engine->getIOTensorName(1), INPUT_BLOB_NAME2) == 0) {
+        inputIndex2 = 1;
+    }
+    if (strcmp(engine->getIOTensorName(2), OUTPUT_BLOB_NAME) == 0) {
+        outputIndex = 2;
+    }
+    // inputIndex1 = engine->getBindingIndex(INPUT_BLOB_NAME1);
+    // inputIndex2 = engine->getBindingIndex(INPUT_BLOB_NAME2);
+    // outputIndex = engine->getBindingIndex(OUTPUT_BLOB_NAME);
     assert(inputIndex1 == 0);
     assert(inputIndex2 == 1);
     assert(outputIndex == 2);
@@ -123,9 +133,28 @@ int FastACVNet_plus::RunFastACVNet_plus(cv::Mat&rectifyImageL2,cv::Mat&rectifyIm
     FastACVNet_plus_preprocess(img_left_device, buffers[inputIndex1], INPUT_W, INPUT_H, stream);
     FastACVNet_plus_preprocess(img_right_device, buffers[inputIndex2], INPUT_W, INPUT_H, stream);
 
+    // Set binding dimensions for input and output tensors
+    for (int i = 0; i < engine->getNbIOTensors(); i++) {
+        const char* tensorName = engine->getIOTensorName(i);
+        if (strcmp(tensorName, INPUT_BLOB_NAME1) == 0) {
+            context->setInputShape(INPUT_BLOB_NAME1, nvinfer1::Dims{4, {1, 3, INPUT_H, INPUT_W}});
+	    context->setInputTensorAddress(INPUT_BLOB_NAME1, buffers[inputIndex1]);
+        } else if (strcmp(tensorName, INPUT_BLOB_NAME2) == 0) {
+            context->setInputShape(INPUT_BLOB_NAME2, nvinfer1::Dims{4, {1, 3, INPUT_H, INPUT_W}});
+	    context->setInputTensorAddress(INPUT_BLOB_NAME2, buffers[inputIndex2]);
+        }
+    }
+
+    // Set address for output tensor
+    context->setOutputTensorAddress(OUTPUT_BLOB_NAME, buffers[outputIndex]);
+
+    // Run inference
+    bool success = context->enqueueV3(stream);
+    assert(success);
+
     // Run inference
     //(*context).enqueue(CRESTEREO_BATCH_SIZE, (void**)buffers, stream, nullptr);
-    (*context).enqueueV2((void**)buffers, stream, nullptr);
+    // (*context).enqueueV2((void**)buffers, stream, nullptr);
 
     cudaStreamSynchronize(stream);
     FastACVNet_plus_reprojectImageTo3D(img_left_device,buffers[2],PointCloud_devide,Calibrationparam_Q,INPUT_H,INPUT_W);
@@ -152,9 +181,12 @@ int FastACVNet_plus::Release()
     CUDA_CHECK(cudaFree(PointCloud_devide));  
     CUDA_CHECK(cudaFree(Q_device));
     CUDA_CHECK(cudaFree(Calibrationparam_Q));
-    context->destroy();
-    engine->destroy();
-    runtime->destroy();
+    //context->destroy();
+    //engine->destroy();
+    //runtime->destroy();
+    delete context;
+    delete engine;
+    delete runtime;
     delete []flow_up;
     flow_up=NULL;
     return 0;

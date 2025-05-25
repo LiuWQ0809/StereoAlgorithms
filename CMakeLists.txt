@@ -12,9 +12,9 @@ else()
 endif()
 
 #添加子目
-add_subdirectory("RAFTStereo")
-add_subdirectory("HitNet")
-add_subdirectory("CREStereo")
-#add_subdirectory("FastACVNet_plus")  #如果编译请使用TensorRT-8.6+
-add_subdirectory("Stereo_Calibration")
+# add_subdirectory("RAFTStereo")
+# add_subdirectory("HitNet")
+# add_subdirectory("CREStereo")
+add_subdirectory("FastACVNet_plus")  #如果编译请使用TensorRT-8.6+
+# add_subdirectory("Stereo_Calibration")
 

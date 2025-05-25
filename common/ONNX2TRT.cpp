@@ -41,7 +41,7 @@ int Onnx2Ttr::get_stream_from_file(const char* filename, unsigned char* buf, siz
 }
 
 void Onnx2Ttr::onnxToTRTModel(Logger gLogger,const char* modelFile,         // name of the onnx model
-    unsigned int maxBatchSize,                               // batch size - NB must be at least as large as the batch we want to run with
+    // unsigned int maxBatchSize,                               // batch size - NB must be at least as large as the batch we want to run with
     const char* out_trtfile) 
 {
   int verbosity = (int) nvinfer1::ILogger::Severity::kWARNING;
@@ -101,18 +101,19 @@ void Onnx2Ttr::onnxToTRTModel(Logger gLogger,const char* modelFile,         // n
   }
 
   // Build the engine
-  builder->setMaxBatchSize(maxBatchSize);
-  config->setMaxWorkspaceSize(1 << 30);
+  // builder->setMaxBatchSize(maxBatchSize);
+  config->setMemoryPoolLimit(nvinfer1::MemoryPoolType::kWORKSPACE, 1 << 30);
   config->setFlag(BuilderFlag::kFP16);
 
-  std::cout << "Total DLA Core : " << builder->getNbDLACores() << std::endl;
+  // std::cout << "Total DLA Core : " << builder->getNbDLACores() << std::endl;
 
   enableDLA(config, gUseDLACore);
   auto* engine = builder->buildSerializedNetwork(*network, *config);
   assert(engine);
 
   // we can destroy the parser
-  parser->destroy();
+  // parser->destroy();
+  delete parser;
 
   // serialize the engine, then close everything down
   assert(engine != nullptr && "engine == nullptr");
