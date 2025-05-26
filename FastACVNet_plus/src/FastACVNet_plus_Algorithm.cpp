@@ -132,15 +132,21 @@ int FastACVNet_plus_Algorithm::RectifyImage(cv::Mat&Image_src,cv::Mat&rectifyIma
 int FastACVNet_plus_Algorithm::RectifyImage(cv::Mat&rectifyImageL2,cv::Mat&rectifyImageR2)
 {
     //RectifyImage
-    cv::Size s1, s2;
-    s1 = rectifyImageL2.size();
-    s2 = rectifyImageR2.size();
-    cv::Mat mapLx, mapLy, mapRx, mapRy;
-    cv::initUndistortRectifyMap(Calibrationparam.intrinsic_left, Calibrationparam.distCoeffs_left, Calibrationparam.R_L, Calibrationparam.P1, s1, CV_16SC2, mapLx, mapLy);
-    cv::initUndistortRectifyMap(Calibrationparam.intrinsic_right, Calibrationparam.distCoeffs_right, Calibrationparam.R_R, Calibrationparam.P2, s1, CV_16SC2, mapRx, mapRy);
-    //cv::Mat rectifyImageL2, rectifyImageR2;
-    cv::remap(rectifyImageL2, rectifyImageL2, mapLx, mapLy, cv::INTER_LINEAR);
-    cv::remap(rectifyImageR2, rectifyImageR2, mapRx, mapRy, cv::INTER_LINEAR);
+    // cv::Size s1, s2;
+    // s1 = rectifyImageL2.size();
+    // s2 = rectifyImageR2.size();
+    // cv::Mat mapLx, mapLy, mapRx, mapRy;
+    // cv::initUndistortRectifyMap(Calibrationparam.intrinsic_left, Calibrationparam.distCoeffs_left, Calibrationparam.R_L, Calibrationparam.P1, s1, CV_16SC2, mapLx, mapLy);
+    // cv::initUndistortRectifyMap(Calibrationparam.intrinsic_right, Calibrationparam.distCoeffs_right, Calibrationparam.R_R, Calibrationparam.P2, s1, CV_16SC2, mapRx, mapRy);
+    // cv::Mat rectifyImageL2, rectifyImageR2;
+    // cv::remap(rectifyImageL2, rectifyImageL2, mapLx, mapLy, cv::INTER_LINEAR);
+    // cv::remap(rectifyImageR2, rectifyImageR2, mapRx, mapRy, cv::INTER_LINEAR);
+    cv::Mat rectifyImageL2_undistorted;
+    cv::Mat rectifyImageR2_undistorted;
+    cv::undistort(rectifyImageL2, rectifyImageL2_undistorted, Calibrationparam.intrinsic_left, Calibrationparam.distCoeffs_left);
+    cv::undistort(rectifyImageR2, rectifyImageR2_undistorted, Calibrationparam.intrinsic_right, Calibrationparam.distCoeffs_right);
+    rectifyImageL2 = rectifyImageL2_undistorted;
+    rectifyImageR2 = rectifyImageR2_undistorted;
 	return 0;
 }
 
